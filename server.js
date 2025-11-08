@@ -1,40 +1,47 @@
 const express = require('express');
-const morgan  = require('morgan');
+const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const { initDB } = require('./app/models/database');
 
-
+// Initialise app FIRST
 const app = express();
+
+// Middleware
 app.use(cors());
-
-// Server port
-const HTTP_PORT = 3333;
-
-// Start server
-app.listen(HTTP_PORT, () => {
-    console.log('Server running on port: ' + HTTP_PORT);
-});
-
-// Logging
 app.use(morgan('tiny'));
-
-// Body parser
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// Root endpoint
-app.get('/', (req, res, next) => {
-    res.json({'status': 'Alive'});
+// Initialise database
+initDB();
+
+// Import routes
+const userRoutes = require('./app/routes/userRoutes');
+const auctionRoutes = require('./app/routes/auctionsRoutes');
+
+// Mount routes
+app.use('/api/users', userRoutes);
+app.use('/api/auctions', auctionRoutes);
+
+// Root endpoint (optional)
+app.get('/', (req, res) => {
+    res.json({ status: 'Alive' });
 });
 
-// Other API endpoints: Links go here...
-// You can uncomment the below three lines as you implement the functionality - we'll discuss this structure in week three.
-// require('./app/routes/user.server.routes')(app);
-// require('./app/routes/core.server.routes')(app);
-// require('./app/routes/question.server.routes')(app);
-
-
-// Default response for any other request
+// 404 fallback
 app.use((req, res) => {
     res.sendStatus(404);
+});
+
+// Error-handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal Server Error' });
+});
+
+// Start server
+const HTTP_PORT = 3333;
+app.listen(HTTP_PORT, () => {
+    console.log('✅ Server running on port: ' + HTTP_PORT);
 });

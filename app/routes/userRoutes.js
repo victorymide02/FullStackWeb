@@ -1,18 +1,11 @@
-import express from "express";
-import * as controller from "../controllers/userController.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
-
+const express = require('express');
 const router = express.Router();
+const userController = require('./app/controllers/userController');
+const { authenticateToken } = require('./app/middleware/authMiddleware');
 
-router.post("/register", controller.register);
-router.post("/login", controller.login);
-router.post("/logout", authenticateToken, controller.logout);
+router.post('/register', userController.register);
+router.post('/login', userController.login);
+router.post('/logout', authenticateToken, userController.logout);
+router.get('/profile', authenticateToken, userController.getProfile);
 
-// Example of a protected route
-router.get("/profile", authenticateToken, (req, res) => {
-    res.json({ 
-        message: `Welcome user ${req.user.userId}` 
-    });
-});
-
-export default router;
+module.exports = router;

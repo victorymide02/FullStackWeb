@@ -1,4 +1,4 @@
-import { dbPromise } from "./db.js";
+import { dbPromise } from "./app/models/database.js";
 
 export async function getAll() {
     const db = await dbPromise;

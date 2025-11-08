@@ -1,5 +1,5 @@
-import * as model from "../models/auctionModel.js";
-import { auctionSchema } from "../validation/auctionValidation.js";
+import * as model from ".app/models/auctionModel.js";
+import { auctionSchema } from ".app/validation/auctionValidation.js";
 
 export async function getAllAuctions(req, res, next) {
     try {
