@@ -1,59 +1,76 @@
-const dbModule = require('../models/database');
+const database = require('../models/database');
 
-function getAll() {
+// GET all auctions
+function getAllAuctions() {
+    const db = database.db; // dynamically access the live DB
     return new Promise((resolve, reject) => {
-        dbModule.db.all('SELECT * FROM items', [], (err, rows) => {
+        const sql = 'SELECT * FROM items';
+        db.all(sql, [], (err, rows) => {
             if (err) reject(err);
             else resolve(rows);
         });
     });
 }
 
-function getById(id) {
+// GET auction by ID
+function getAuctionById(id) {
+    const db = database.db;
     return new Promise((resolve, reject) => {
-        dbModule.db.get('SELECT * FROM items WHERE item_id = ?', [id], (err, row) => {
+        const sql = 'SELECT * FROM items WHERE item_id = ?';
+        db.get(sql, [id], (err, row) => {
             if (err) reject(err);
             else resolve(row);
         });
     });
 }
 
-function create(auction) {
+// CREATE auction
+function createAuction(auction) {
+    const db = database.db;
+    const { name, description, starting_bid, start_date, end_date, creator_id } = auction;
     return new Promise((resolve, reject) => {
-        const { name, description, starting_bid, start_date, end_date, creator_id } = auction;
-        const query = `
+        const sql = `
             INSERT INTO items (name, description, starting_bid, start_date, end_date, creator_id)
             VALUES (?, ?, ?, ?, ?, ?)
         `;
-        dbModule.db.run(query, [name, description, starting_bid, start_date, end_date, creator_id], function (err) {
+        db.run(sql, [name, description, starting_bid, start_date, end_date, creator_id], function (err) {
             if (err) reject(err);
             else resolve({ item_id: this.lastID, ...auction });
         });
     });
 }
 
-function update(id, auction) {
+function updateAuction(id, updatedAuction) {
+    const db = database.db;
+    const { name, description, starting_bid, start_date, end_date } = updatedAuction;
     return new Promise((resolve, reject) => {
-        const { name, description, starting_bid, start_date, end_date } = auction;
-        const query = `
-            UPDATE items SET name = ?, description = ?, starting_bid = ?, start_date = ?, end_date = ?
+        const sql = `
+            UPDATE items
+            SET name = ?, description = ?, starting_bid = ?, start_date = ?, end_date = ?
             WHERE item_id = ?
         `;
-        dbModule.db.run(query, [name, description, starting_bid, start_date, end_date, id], function (err) {
+        db.run(sql, [name, description, starting_bid, start_date, end_date, id], function (err) {
             if (err) reject(err);
-            else resolve(this.changes ? { id, ...auction } : null);
+            else resolve({ changes: this.changes });
         });
     });
 }
 
-function remove(id) {
+function deleteAuction(id) {
+    const db = database.db;
     return new Promise((resolve, reject) => {
-        const query = 'DELETE FROM items WHERE item_id = ?';
-        dbModule.db.run(query, [id], function (err) {
+        const sql = 'DELETE FROM items WHERE item_id = ?';
+        db.run(sql, [id], function (err) {
             if (err) reject(err);
-            else resolve(this.changes);
+            else resolve({ deleted: this.changes });
         });
     });
 }
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = {
+    getAllAuctions,
+    getAuctionById,
+    createAuction,
+    updateAuction,
+    deleteAuction,
+};

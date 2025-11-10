@@ -1,11 +1,9 @@
-// app/routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
-
 const auctionController = require('../controllers/auctionController');
 const { authenticateToken } = require('../middleware/authMiddleware');
 
-// Example routes
+// Define auction routes
 router.post('/', authenticateToken, auctionController.createAuction);
 router.get('/', auctionController.getAllAuctions);
 router.get('/:id', auctionController.getAuctionById);
