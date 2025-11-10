@@ -4,12 +4,14 @@ const DBSOURCE = 'db.sqlite';
 let db;
 
 function initDB() {
+    if (db) return db; // already initialised
+
     db = new sqlite3.Database(DBSOURCE, (err) => {
         if (err) {
-            console.error(err.message);
+            console.error('❌ DB connection error:', err.message);
             throw err;
         } else {
-            console.log('Connected to the SQLite database.');
+            console.log('✅ Connected to the SQLite database.');
 
             db.run(`CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,4 +59,11 @@ function initDB() {
     return db;
 }
 
-module.exports = { initDB, db };
+// Export functions and a dynamic getter for db
+module.exports = {
+    initDB,
+    get db() {
+        if (!db) throw new Error('Database not initialized. Call initDB() first.');
+        return db;
+    },
+};

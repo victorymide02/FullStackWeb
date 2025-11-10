@@ -1,12 +1,13 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
-const { registerSchema, loginSchema } = require('./app/validations/userValidation');
-const { findUserByEmail, createUser, updateSessionToken, generateHash } = require('./app/models/userModel');
+const { registerSchema, loginSchema } = require('../validation/userValidation');
+const { findUserByEmail, createUser, updateSessionToken, generateHash } = require('../models/userModel');
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || 'development_secret_key';
 
+// User Registration
 async function register(req, res) {
     try {
         const { error, value } = registerSchema.validate(req.body);
