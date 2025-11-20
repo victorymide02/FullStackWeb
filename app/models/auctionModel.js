@@ -1,66 +1,76 @@
-const database = require('../models/database');
+const { db } = require('../models/database');
 
 // GET all auctions
-function getAllAuctions() {
-    const db = database.db; // dynamically access the live DB
+async function getAllAuctions() {
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM items';
-        db.all(sql, [], (err, rows) => {
+        const query = `SELECT * FROM items`;
+        db.all(query, [], (err, rows) => {
             if (err) reject(err);
             else resolve(rows);
         });
     });
 }
 
-// GET auction by ID
-function getAuctionById(id) {
-    const db = database.db;
+// CREATE auction
+async function createAuction(auction) {
+    const { name, description, starting_bid, start_date, end_date, creator_id } = auction;
+
     return new Promise((resolve, reject) => {
-        const sql = 'SELECT * FROM items WHERE item_id = ?';
-        db.get(sql, [id], (err, row) => {
+        const query = `
+            INSERT INTO items (name, description, starting_bid, start_date, end_date, creator_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        `;
+        db.run(
+            query,
+            [name, description, starting_bid, start_date, end_date, creator_id],
+            function (err) {
+                if (err) reject(err);
+                else resolve({
+                    item_id: this.lastID,
+                    ...auction
+                });
+            }
+        );
+    });
+}
+
+// GET auction by ID
+async function getAuctionById(id) {
+    return new Promise((resolve, reject) => {
+        const query = `SELECT * FROM items WHERE item_id = ?`;
+        db.get(query, [id], (err, row) => {
             if (err) reject(err);
             else resolve(row);
         });
     });
 }
 
-// CREATE auction
-function createAuction(auction) {
-    const db = database.db;
-    const { name, description, starting_bid, start_date, end_date, creator_id } = auction;
-    return new Promise((resolve, reject) => {
-        const sql = `
-            INSERT INTO items (name, description, starting_bid, start_date, end_date, creator_id)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `;
-        db.run(sql, [name, description, starting_bid, start_date, end_date, creator_id], function (err) {
-            if (err) reject(err);
-            else resolve({ item_id: this.lastID, ...auction });
-        });
-    });
-}
+// UPDATE auction
+async function updateAuction(id, data) {
+    const { name, description, starting_bid, start_date, end_date } = data;
 
-function updateAuction(id, updatedAuction) {
-    const db = database.db;
-    const { name, description, starting_bid, start_date, end_date } = updatedAuction;
     return new Promise((resolve, reject) => {
-        const sql = `
+        const query = `
             UPDATE items
             SET name = ?, description = ?, starting_bid = ?, start_date = ?, end_date = ?
             WHERE item_id = ?
         `;
-        db.run(sql, [name, description, starting_bid, start_date, end_date, id], function (err) {
-            if (err) reject(err);
-            else resolve({ changes: this.changes });
-        });
+        db.run(
+            query,
+            [name, description, starting_bid, start_date, end_date, id],
+            function (err) {
+                if (err) reject(err);
+                else resolve({ updated: this.changes });
+            }
+        );
     });
 }
 
-function deleteAuction(id) {
-    const db = database.db;
+// DELETE auction
+async function deleteAuction(id) {
     return new Promise((resolve, reject) => {
-        const sql = 'DELETE FROM items WHERE item_id = ?';
-        db.run(sql, [id], function (err) {
+        const query = `DELETE FROM items WHERE item_id = ?`;
+        db.run(query, [id], function (err) {
             if (err) reject(err);
             else resolve({ deleted: this.changes });
         });
@@ -69,8 +79,8 @@ function deleteAuction(id) {
 
 module.exports = {
     getAllAuctions,
-    getAuctionById,
     createAuction,
+    getAuctionById,
     updateAuction,
-    deleteAuction,
+    deleteAuction
 };
