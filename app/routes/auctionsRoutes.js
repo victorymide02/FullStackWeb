@@ -1,21 +1,13 @@
-import express from "express";
-import * as controller from "controllers/auctionController.js";
-
-// app/routes/userRoutes.js
 const express = require('express');
-const userController = require('./app/controllers/userController');
+const router = express.Router();
+const auctionController = require('../controllers/auctionController');
+const { authenticateToken } = require('../middleware/authMiddleware');
 
-// Example route
-router.post('/register', userController.register);
+// Define auction routes
+router.post('/', authenticateToken, auctionController.createAuction);
+router.get('/', auctionController.getAllAuctions);
+router.get('/:id', auctionController.getAuctionById);
+router.put('/:id', authenticateToken, auctionController.updateAuction);
+router.delete('/:id', authenticateToken, auctionController.deleteAuction);
 
 module.exports = router;
-
-const router = express.Router();
-
-router.get("/", controller.getAllAuctions);
-router.post("/", controller.createAuction);
-router.get("/:id", controller.getAuctionById);
-router.patch("/:id", controller.updateAuction);
-router.delete("/:id", controller.deleteAuction);
-
-export default router;

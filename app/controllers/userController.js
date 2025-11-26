@@ -1,12 +1,13 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
-const { registerSchema, loginSchema } = require('./app/validations/userValidation');
-const { findUserByEmail, createUser, updateSessionToken, generateHash } = require('./app/models/userModel');
+const { registerSchema, loginSchema } = require('../validation/userValidation');
+const { findUserByEmail, findUserById,createUser, updateSessionToken, generateHash } = require('../models/userModel');
 
 dotenv.config();
 const JWT_SECRET = process.env.JWT_SECRET || 'development_secret_key';
 
+// User registration
 async function register(req, res) {
     try {
         const { error, value } = registerSchema.validate(req.body);
@@ -24,6 +25,7 @@ async function register(req, res) {
     }
 }
 
+// User login
 async function login(req, res) {
     try {
         const { error, value } = loginSchema.validate(req.body);
@@ -38,13 +40,19 @@ async function login(req, res) {
         const token = jwt.sign({ user_id: user.user_id }, JWT_SECRET, { expiresIn: '2h' });
         await updateSessionToken(user.user_id, token);
 
-        res.json({ message: 'Login successful', token });
-    } catch (err) {
+        res.json({ message: 'Login successful', token, 
+            user: { user_id: user.user_id, 
+                first_name: user.first_name,
+                last_name: user.last_name,
+                email: user.email } });
+
+        } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Error logging in' });
     }
 }
 
+// User logout
 async function logout(req, res) {
     try {
         const userId = req.user.user_id;
@@ -55,8 +63,34 @@ async function logout(req, res) {
     }
 }
 
+// Get user profile
 async function getProfile(req, res) {
     res.json({ message: `Welcome user ${req.user.user_id}` });
 }
 
-module.exports = { register, login, logout, getProfile };
+// Get specific user by ID
+async function getUserById(req, res) {
+    try {
+        const id = parseInt(req.params.id);
+        if (isNaN(id)) {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
+
+        const user = await findUserById(id);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Never return sensitive fields
+        const { password, salt, session_token, ...safeUser } = user;
+
+        res.json(safeUser);
+
+    } catch (err) {
+        console.error('GET USER BY ID ERROR:', err);
+        res.status(500).json({ message: "Error fetching user" });
+    }
+}
+
+// Export functions
+module.exports = { register, login, logout, getProfile, getUserById };
